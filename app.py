@@ -1,4 +1,4 @@
-# 以下を「app.py」に書き込み
+# app.py
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
@@ -10,16 +10,19 @@ from langchain.prompts.chat import (
 import os
 
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
-os.environ["OPENAI_API_KEY"] = st.secrets.OpenAIAPI.openai_api_key
+# 🔥ここを修正（環境変数にセットは不要！直接使う）
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
-chat = ChatOpenAI(model="gpt-3.5-turbo")
+chat = ChatOpenAI(
+    model="gpt-3.5-turbo",
+    openai_api_key=openai_api_key   # 🔥ここに直接キーを渡す
+)
 
 # プロンプトのテンプレート
 system_template = (
     "あなたは、{source_lang} を {target_lang}に翻訳する優秀な翻訳アシスタントです。翻訳結果以外は出力しないでください。"
 )
 system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
-
 human_template = "{text}"
 human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
 
@@ -28,7 +31,7 @@ chat_prompt = ChatPromptTemplate.from_messages(
 )
 
 if "response" not in st.session_state:
-    st.session_state["response"]= ""
+    st.session_state["response"] = ""
 
 # LLMとやりとりする関数
 def communicate():
