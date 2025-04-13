@@ -7,14 +7,16 @@ from langchain.prompts.chat import (
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate
 )
+import os
 
 # Streamlit Community Cloudの「Secrets」からOpenAI API keyを取得
-openai_api_key = st.secrets["openai"]["api_key"]
-chat = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=openai_api_key)
+os.environ["OPENAI_API_KEY"] = st.secrets.OpenAIAPI.openai_api_key
+
+chat = ChatOpenAI(model="gpt-3.5-turbo")
 
 # プロンプトのテンプレート
 system_template = (
-    "あなたは、{source_lang} の {text_type} を {target_lang} に翻訳する優秀な翻訳アシスタントです。翻訳結果以外は出力しないでください。翻訳スタイルは {translation_style} です。"
+    "あなたは、{source_lang} を {target_lang}に翻訳する優秀な翻訳アシスタントです。翻訳結果以外は出力しないでください。"
 )
 system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
 
@@ -26,24 +28,17 @@ chat_prompt = ChatPromptTemplate.from_messages(
 )
 
 if "response" not in st.session_state:
-    st.session_state["response"] = ""
-
-if "user_input" not in st.session_state:
-    st.session_state["user_input"] = ""
+    st.session_state["response"]= ""
 
 # LLMとやりとりする関数
 def communicate():
     text = st.session_state["user_input"]
-    try:
-        response = chat(
-            chat_prompt.format_prompt(
-                source_lang=source_lang, target_lang=target_lang, text=text, text_type="一般的な文章", translation_style="丁寧な言葉遣い"
-            ).to_messages()
-        )
-        st.session_state["response"] = response.content
-    except Exception as e:
-        st.error(f"翻訳中にエラーが発生しました: {e}")
-        st.session_state["response"] = ""
+    response = chat(
+        chat_prompt.format_prompt(
+            source_lang=source_lang, target_lang=target_lang, text=text
+        ).to_messages()
+    )
+    st.session_state["response"] = response.content
 
 # ユーザーインターフェイスの構築
 st.title("翻訳アプリ")
@@ -56,5 +51,5 @@ st.text_input("翻訳する文章を入力してください。", key="user_inpu
 st.button("翻訳", type="primary", on_click=communicate)
 
 if st.session_state["user_input"] != "":
-    st.markdown("### 翻訳結果:")
+    st.write("翻訳結果:")
     st.write(st.session_state["response"])
